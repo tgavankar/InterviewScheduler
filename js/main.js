@@ -1,4 +1,20 @@
-// API Key: AIzaSyCJB-CTN9Lq925VkvX3awxOMEuNi6OvieA
+/**
+ * API Key Switcher
+ * Change to your name when developing.
+ */
+var user = 'tanay';
+
+var keys = {
+    'tanay': {
+        'client': '41915610334.apps.googleusercontent.com',
+        'api': 'AIzaSyCJB-CTN9Lq925VkvX3awxOMEuNi6OvieA',
+    },
+    'jocelyn': {
+        'client': '1054661617958.apps.googleusercontent.com',
+        'api': 'AIzaSyDiwVKBJwrbJFtrxqjenl7u9fk5eVMoMJw',
+    }
+};
+
 $(document).ready(function() {
 
     $('#form').submit(function(event) {
@@ -76,7 +92,7 @@ function getFreeBusy(studentArray) {
 	for(var i in studentArray) {
 	    items.push({'id': studentArray[i].c_calendar_id});
 	}
-    gapi.client.setApiKey('AIzaSyDiwVKBJwrbJFtrxqjenl7u9fk5eVMoMJw');
+    gapi.client.setApiKey(keys[user]['api']);
 	//get result from form, for every group, create new Student Object with fname, lname, calendar_id, 
 	//clone available times into free field, and empty array for busy and also within same loop
 	//create an array of items that holds calid and also push new student objects into student array
@@ -124,7 +140,7 @@ function init() {
 
 function checkAuth() { 
     var config = {
-        'client_id': '1054661617958.apps.googleusercontent.com',
+        'client_id': keys[user]['client'],
         'scope': 'https://www.googleapis.com/auth/calendar',
         'response_type': 'token'
     };
@@ -139,7 +155,7 @@ function checkAuth() {
 
 //Add Events to Calendar
 function asdf() {
-    gapi.client.setApiKey('AIzaSyDiwVKBJwrbJFtrxqjenl7u9fk5eVMoMJw');
+    gapi.client.setApiKey(keys[user]['api']);
     var resource = {
         "summary":"My Summary",
         "location": "My Location",
@@ -176,7 +192,7 @@ function asdf() {
 }
 //make Calendar
 function qwer(){
-    gapi.client.setApiKey('AIzaSyDiwVKBJwrbJFtrxqjenl7u9fk5eVMoMJw');
+    gapi.client.setApiKey(keys[user]['api']);
 
 calendar = {
     'summary': 'calendarSummary',
