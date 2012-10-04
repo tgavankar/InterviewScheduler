@@ -15,125 +15,143 @@ var keys = {
     }
 };
 
-$(document).ready(function() {
+var FREE = 1;
+var BUSY = 0;
 
+$(document).ready(function() {
+    $('.timePicker').datetimepicker({
+        dateFormat: "yy-mm-dd",
+        timeFormat: "hh:mm:ss.lz",
+        useLocalTimezone: true,
+        timezoneIso8601: true,
+        separator: "T",
+        stepMinute: 15,
+        showTimezone: true,
+    });
+    
     $('#form').submit(function(event) {
         event.preventDefault();
-	    var studentArray = parse();
-    	getFreeBusy(studentArray);
+        var studentArray = parse();
+        getFreeBusy(studentArray);
 
     });
 });
 
-//
-function Student(a_fname, b_lname, c_calendar_id, d_free_times, e_busy_times) {
-    this.a_fname = a_fname;    
-    this.b_lname = b_lname;    
-    this.c_calendar_id = c_calendar_id;
-    this.d_free_times = d_free_times;
-    this.e_busy_times = e_busy_times;
+function Person() {
+    this.fname;
+    this.lname;
+    this.calId;
+    this.times;
 }
 
 function Interviewer() {
-
+    Person.call(this);
+    this.start;
+    this.end;
+    this.interviewDuration;
 }
 
-var available_times = {8:[1,1,1,1],
-                       9:[1,1,1,1],
-                       10:[1,1,1,1],
-                       11:[1,1,1,1],
-                       12:[1,1,1,1],
-                       13:[1,1,1,1],
-                       14:[1,1,1,1],
-                       15:[1,1,1,1],
-                       16:[1,1,1,1],
-					   17:[1,1,1,1]}
-					   
-function parse() {
-var fields = document.getElementsByTagName("fieldset");
-var arr = {};
-    /*$('fieldset').find('input').each(function(i) {
-	    console.log(this);
-	});*/
-    for(var i = 0; i<fields.length; i++) {
-        //gets inputs for every field
-        var inputs = fields[i].getElementsByTagName("input");
-        var data = [];
-        for(var j = 0; j< inputs.length; j++) {
-            data.push(inputs[j].value);
-        }
-        var s = new Student();
-        var count = 0;
-        for(k in s) {
-            if(count < inputs.length) {
-                s[k] = data[count];
-                 count++;
-            } else {
-                break;
-            }
-        }
-        arr[s.c_calendar_id] = s;
+// Takes in 2 strings for start and end of this time block
+function TimeBlock(startS, endS) {
+    this.free_times = []; // Array with elem i representing start + i*15(mins)
+    this.start = strToDate(startS).roundDown15();
+    this.end = strToDate(endS).roundUp15();
+    
+    for(var i=this.start.clone(); i.isBefore(this.end); i.addMinutes(15)) {
+        this.free_times.push(FREE);
     }
+    
+    this.markBlocks = function(block, duration, markAs) {
+        var blockIndex = getNumBlocks(this.start, block); // Get time difference in 15 min blocks
+        var blocksToCheck = (duration / 15 + (duration % 15 > 0 ? 1 : 0)); // Round up duration to 15 min blocks
+        for(var i = 0; i < blocksToCheck; i++) {
+            this.free_times[i + blockIndex] = markAs;
+        }
+    }
+}
+                      
+function parse() {
+    var arr = {};
+    
+    var interviewer = new Interviewer();
+    interviewer.fname = $('.interviewerFieldset > .fname').val();
+    interviewer.lname = $('.interviewerFieldset > .lname').val();
+    interviewer.start = $('#timeMin').val();
+    interviewer.end = $('#timeMax').val();
+    interviewer.calId = $('.interviewerFieldset > .calId').val();
+    
+    arr[interviewer.calId] = interviewer;
+    
+    $('.studentFieldset').each(function() {
+        var s = new Person();
+        s.fname = $(this).children('.fname').val();
+        s.lname = $(this).children('.lname').val();
+        s.calId = $(this).children('.calId').val();
+        arr[s.calId] = s; // Key off calendar ID for easy retrieval
+    });
     return arr;
 }
 
+function getNumBlocks(start, end) {
+    return (end.getTime() - start.getTime()) / (1000 * 60 * 15);
+}
 
-//x.substring(x.indexOf('T')+1, x.indexOf('.')).split(":");
+function getMinsDiff(start, end) {
+    return (end.getTime() - start.getTime()) / (1000 * 60);
+}
+
 /*[
-					{
-						'id': 'r5p25tev3v42r11u242u959ev8@group.calendar.google.com'
-					},{
-						'id': 'cq6omn9kt4uld6agu4dhevucm0@group.calendar.google.com'
-					}
-				]*/
+                    {
+                        'id': 'r5p25tev3v42r11u242u959ev8@group.calendar.google.com'
+                    },{
+                        'id': 'cq6omn9kt4uld6agu4dhevucm0@group.calendar.google.com'
+                    }
+                ]*/
 function getFreeBusy(studentArray) {
     var items = [];
 
-	for(var i in studentArray) {
-	    items.push({'id': studentArray[i].c_calendar_id});
-	}
+    for(var id in studentArray) {
+        items.push({'id': studentArray[id].calId});
+    }
+    
     gapi.client.setApiKey(keys[user]['api']);
-	//get result from form, for every group, create new Student Object with fname, lname, calendar_id, 
-	//clone available times into free field, and empty array for busy and also within same loop
-	//create an array of items that holds calid and also push new student objects into student array
-	var data = {'items': items,
-			 'timeMin': '2012-10-01T9:00:00.000-04:00',
-			 'timeMax': '2012-10-01T17:00:00.000-04:00',
-				'timeZone': 'America/New_York'
-				};
-				
-				"2012-10-01T16:30:00-04:00"
-		gapi.client.load('calendar', 'v3', function(callback) {
-			var query = gapi.client.calendar.freebusy.query(data);
-			query.execute(function(resp) {
-			//parse out time, for every calendar, parse out time, loop through student array(length should be equal) and then set the busy and free times
-			//might need to do a callback function in order for data to stay in scope
-			console.log(resp.calendars);
-            console.log(resp.calendars.length);
-            for(var s in resp.calendars) {
-                console.log(s);
-                console.log(resp.calendars[s]["busy"]);
-                console.log(resp.calendars[s].busy[0].end);
-                var busyTimes = resp.calendars[s].busy;
-                for( var t in busyTimes) {
-                    var start = busyTimes[t].start.substring(busyTimes[t].end.indexOf('T')+1);
-                    var startp = start.substring(0,start.indexOf('-'));
-                    var num = startp.split(':');
+    //get result from form, for every group, create new Student Object with fname, lname, cal_id, 
+    //clone available times into free field, and empty array for busy and also within same loop
+    //create an array of items that holds calid and also push new student objects into student array
+    var data = { 
+        'items': items,
+        'timeMin': $('#timeMin').val(),
+        'timeMax': $('#timeMax').val(),
+    };
+                
+    gapi.client.load('calendar', 'v3', function(callback) {
+        var query = gapi.client.calendar.freebusy.query(data);
+        query.execute(function(resp) {
+            for(var calId in resp.calendars) {
+                var busyTimes = resp.calendars[calId].busy;
+                var tb = new TimeBlock(data.timeMin, data.timeMax);
+                for(b in busyTimes) {
+                    var currStart = strToDate(busyTimes[b].start).roundDown15();
+                    var currEnd = strToDate(busyTimes[b].end).roundUp15();
                     
-                    var times = jQuery.extend({}, available_times);
-                    
+                    var duration = getMinsDiff(currStart, currEnd);
+                    tb.markBlocks(currStart, duration, BUSY);
                 }
-                //var x = resp.calendars[s].busy[0]["end"].substring(x.indexOf('T')+1);
+                studentArray[calId].times = tb;
             }
-			
-			
-          
-       
-        })
-		;});
+        });
+    });
+    
+    console.log(studentArray);
 }
  
+function strToDate(s) {
+    var d = new Date();
+    d.setISO8601(s);
+    return d;
+}
 
+/*************************************other stuff**********************************/
 function init() { 
     gapi.auth.init(checkAuth); 
 } 
@@ -164,8 +182,8 @@ function asdf() {
         "date": "2012/06/18"  /*if not an all day event, "date" should be "dateTime" with a dateTime value formatted according to RFC 3339*/},
         "end": {
         "date": "2012/06/18"  /*if not an all day event, "date" should be "dateTime" with a dateTime value formatted according to RFC 3339*/}
-		};
-	   
+        };
+       
     var event = {
     'summary': 'Appointment',
     'location': 'Somewhere',
@@ -178,7 +196,7 @@ function asdf() {
         var req = gapi.client.calendar.events.insert({
         'calendarId': 'r5p25tev3v42r11u242u959ev8@group.calendar.google.com',
         'resource': event});
-	
+    
         req.execute(function(resp) {
             console.log(resp);
             if (resp.id){
@@ -202,7 +220,7 @@ calendar = {
  var req = gapi.client.calendar.calendars.insert({'resource':calendar});
  req.execute(function(resp) {
             console.log(resp);
-			console.log(resp.id);
+            console.log(resp.id);
             if (resp.id){
                 alert("Event was successfully added to the calendar!");
             } else{
@@ -210,6 +228,6 @@ calendar = {
             }
        
         });
-		});
+        });
 }
 
