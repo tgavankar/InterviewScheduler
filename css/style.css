@@ -5,3 +5,22 @@
 .ui-timepicker-div dl dd { margin: 0 10px 10px 65px; }
 .ui-timepicker-div td { font-size: 90%; }
 .ui-tpicker-grid-label { background: none; border: none; margin: 0; padding: 0; }
+
+
+
+body {
+    background-color: #A7DBD8;
+}
+
+.container {
+    background-color: #E0E4CC;
+    box-shadow: 0px 0px 0px 2px #69D2E7;
+}
+
+input[type="text"], textarea, select {
+    background-color: #F38630;
+}
+
+input[type="text"]:focus, textarea:focus, select:focus {
+    background-color: #FA6900;
+}
