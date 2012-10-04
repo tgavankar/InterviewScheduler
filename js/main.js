@@ -196,7 +196,9 @@ function getFreeBusy(peopleInfo) {
             for(var slot in masterSched) {
                 // Double check for string as per http://stackoverflow.com/questions/4059147/check-if-a-variable-is-a-string
                 if(typeof masterSched[slot] == 'string' || masterSched[slot] instanceof String) {
-                    output[masterSched[slot]] = peopleInfo[interviewerId].times.start.clone().addMinutes(slot * 15);
+                    if(!(masterSched[slot] in output)) {
+                        output[masterSched[slot]] = peopleInfo[interviewerId].times.start.clone().addMinutes(slot * 15);
+                    }
                 }
             }
             
