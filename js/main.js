@@ -31,11 +31,41 @@ $(document).ready(function() {
     
     $('#form').submit(function(event) {
         event.preventDefault();
-        var studentArray = parse();
-        getFreeBusy(studentArray);
-
+        var peopleInfo = parse();
+        getFreeBusy(peopleInfo);
     });
 });
+
+function getIntId(info) {
+    for(var id in info) {
+        if(info[id] instanceof Interviewer) {
+            return id;
+        }
+    }
+}
+
+function trimSched(info, intId) {
+    for(var id in info) {
+        if(id === intId) {
+            trimInterviewer(info, intId);
+        }
+        else {
+            trimPerson(info, id, intId);
+        }
+    }
+}
+
+function trimInterviewer(info, id) {
+    /*for(int i in info[id].times.freeTimes) {
+        
+    }*/
+}
+
+function trimPerson(info, id, intId) {
+    for(var i=0; i<info[id].times.freeTimes.length; i++) {
+        info[id].times.freeTimes[i] &= info[intId].times.freeTimes[i]
+    }
+}
 
 function Person() {
     this.fname;
@@ -53,19 +83,19 @@ function Interviewer() {
 
 // Takes in 2 strings for start and end of this time block
 function TimeBlock(startS, endS) {
-    this.free_times = []; // Array with elem i representing start + i*15(mins)
+    this.freeTimes = []; // Array with elem i representing start + i*15(mins)
     this.start = strToDate(startS).roundDown15();
     this.end = strToDate(endS).roundUp15();
     
     for(var i=this.start.clone(); i.isBefore(this.end); i.addMinutes(15)) {
-        this.free_times.push(FREE);
+        this.freeTimes.push(FREE);
     }
     
     this.markBlocks = function(block, duration, markAs) {
         var blockIndex = getNumBlocks(this.start, block); // Get time difference in 15 min blocks
         var blocksToCheck = (duration / 15 + (duration % 15 > 0 ? 1 : 0)); // Round up duration to 15 min blocks
         for(var i = 0; i < blocksToCheck; i++) {
-            this.free_times[i + blockIndex] = markAs;
+            this.freeTimes[i + blockIndex] = markAs;
         }
     }
 }
@@ -79,6 +109,7 @@ function parse() {
     interviewer.start = $('#timeMin').val();
     interviewer.end = $('#timeMax').val();
     interviewer.calId = $('.interviewerFieldset > .calId').val();
+    interviewer.interviewDuration = parseInt($('#intDuration').val());
     
     arr[interviewer.calId] = interviewer;
     
@@ -107,11 +138,11 @@ function getMinsDiff(start, end) {
                         'id': 'cq6omn9kt4uld6agu4dhevucm0@group.calendar.google.com'
                     }
                 ]*/
-function getFreeBusy(studentArray) {
+function getFreeBusy(peopleInfo) {
     var items = [];
 
-    for(var id in studentArray) {
-        items.push({'id': studentArray[id].calId});
+    for(var id in peopleInfo) {
+        items.push({'id': peopleInfo[id].calId});
     }
     
     gapi.client.setApiKey(keys[user]['api']);
@@ -137,14 +168,85 @@ function getFreeBusy(studentArray) {
                     var duration = getMinsDiff(currStart, currEnd);
                     tb.markBlocks(currStart, duration, BUSY);
                 }
-                studentArray[calId].times = tb;
+                peopleInfo[calId].times = tb;
             }
+            
+            // Raw data has been pulled
+            
+            // Clean up data for optimization
+            var interviewerId = getIntId(peopleInfo);
+            trimSched(peopleInfo, interviewerId);
+            
+            var masterSched = peopleInfo[interviewerId].times.freeTimes;
+            var otherScheds = []
+            
+            for(var calId in peopleInfo) {
+                if(calId === interviewerId) {
+                    continue;
+                }
+                
+                otherScheds.push({id: calId, times: peopleInfo[calId].times.freeTimes});
+            }
+            
+            // Perform algo
+            findMatching(masterSched, otherScheds, peopleInfo[interviewerId].interviewDuration);
+            
+            var output = {};
+            
+            for(var slot in masterSched) {
+                // Double check for string as per http://stackoverflow.com/questions/4059147/check-if-a-variable-is-a-string
+                if(typeof masterSched[slot] == 'string' || masterSched[slot] instanceof String) {
+                    output[masterSched[slot]] = peopleInfo[interviewerId].times.start.clone().addMinutes(slot * 15);
+                }
+            }
+            
+            // Final output keyed on calId -> start datetime of interview
+            console.log(output);
+            
         });
     });
-    
-    console.log(studentArray);
 }
- 
+
+function findMatching(master, other, dur) {
+    if(other.length == 0) {
+        return true;
+    }
+    
+    var currEntry = other.pop();
+    var currId = currEntry.id;
+    var curr = currEntry.times;
+    
+    for(var i=0; i<curr.length; i++) {
+        if(hasFreeBlock(master, i, dur) && hasFreeBlock(curr, i, dur)) {
+            for(var d=0; d<dur; d++) {
+                master[d+i] = currId;
+            }
+            
+            if(findMatching(master, other, dur)) {
+                return true;
+            }
+            else {
+                // undo mutations
+                for(var d=0; d<dur; d++) {
+                    master[d+i] = FREE;
+                }
+            }
+        }
+    }
+    
+    other.push(currEntry);
+    return false;
+}
+
+function hasFreeBlock(sched, ind, dur) {
+    for(var i=0; i<dur; i++) {
+        if(sched[i+ind] !== FREE) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function strToDate(s) {
     var d = new Date();
     d.setISO8601(s);
