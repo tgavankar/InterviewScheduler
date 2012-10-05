@@ -31,6 +31,15 @@ var BUSY = 0;
 var cl;
 
 $(document).ready(function() {
+    $('.question').next().hide();
+    var i = 0;
+    $('.question').each(function(){
+         $(this).click(function(){ 
+             $('.question:eq('+$(this).data('idf')+')').next().slideToggle('slow');
+         });
+         $(this).data('idf',i);
+         i++;
+    });
     $('.timePicker').datetimepicker({
         dateFormat: "yy-mm-dd",
         timeFormat: "hh:mm:ss.lz",
@@ -49,6 +58,7 @@ $(document).ready(function() {
         $('#accordion').append('<h3><a href="#">Candidate</a></h3><div><fieldset class="studentFieldset"><label for="fname">First Name: </label><input type="text" name="fname" class="fname" placeholder="First Name" required /><label for="lname">Last Name: </label><input type="text" name="lname" class="lname" placeholder="Last Name" required /><label for="calId">Calendar ID: </label><input type="text" name="calId" class="calId" placeholder="Google Calendar ID" required /></fieldset><div class="floatright"><button class="delete" type="button">Remove</button></div></div>')
             .accordion('destroy').accordion({ autoHeight: false, collapsible: true, active: $('.studentFieldset').size()});
     });
+
     
     // Use live() so dynamically added nodes get the listener too
     $(".delete", $("#accordion")[0]).live('click', function(event) {
@@ -60,12 +70,17 @@ $(document).ready(function() {
     
     $('#form').submit(function(event) {
         event.preventDefault();
-
-        $("#calContent").html('');
-        cl = new CanvasLoader('calContent');
-        cl.setShape('spiral'); // default is 'oval'
-        cl.show(); // Hidden by default
-        init();
+        if(validateDate(document.getElementById('timeMax')) > -1) {
+            document.getElementById('timeMax').setCustomValidity("Please enter a Start Date before End Date");
+        } else {
+            document.getElementById('timeMax').setCustomValidity("");
+            $("#calContent").html('');
+            cl = new CanvasLoader('calContent');
+            cl.setShape('spiral'); // default is 'oval'
+            cl.show(); // Hidden by default
+            init();
+        }
+     
     });
 
 });
@@ -76,6 +91,13 @@ function getIntId(info) {
             return id;
         }
     }
+}
+
+function validateDate(input) {
+    var date1 = strToDate($('#timeMin').val());
+    var date2 = strToDate($('#timeMax').val());
+    return Date.compare(date1, date2);
+     
 }
 
 function trimSched(info, intId) {
@@ -201,57 +223,60 @@ function getFreeBusy(peopleInfo) {
     gapi.client.load('calendar', 'v3', function(callback) {
         var query = gapi.client.calendar.freebusy.query(data);
         query.execute(function(resp) {
-            for(var i in items) {
-                var tb = new TimeBlock(data.timeMin, data.timeMax);
-                peopleInfo[items[i].id].times = tb;
-            }
-        
-            for(var calId in resp.calendars) {
-                var busyTimes = resp.calendars[calId].busy;
-                var tb = peopleInfo[calId].times;
-                for(b in busyTimes) {
-                    var currStart = strToDate(busyTimes[b].start).roundDown15();
-                    var currEnd = strToDate(busyTimes[b].end).roundUp15();
-                    
-                    var duration = getMinsDiff(currStart, currEnd);
-                    tb.markBlocks(currStart, duration, BUSY);
+            if(typeof resp.calendars[items[0].id].busy === 'undefined') {
+                 $("#calContent").html('The calendars you entered were not valid.');
+            } else {
+                for(var i in items) {
+                    var tb = new TimeBlock(data.timeMin, data.timeMax);
+                    peopleInfo[items[i].id].times = tb;
                 }
-                peopleInfo[calId].times = tb;
-            }
-            // Raw data has been pulled
             
-            // Clean up data for optimization
-            var interviewerId = getIntId(peopleInfo);
-            trimSched(peopleInfo, interviewerId);
-            
-            var masterSched = peopleInfo[interviewerId].times.freeTimes;
-            var otherScheds = []
-            
-            for(var calId in peopleInfo) {
-                if(calId === interviewerId) {
-                    continue;
+                for(var calId in resp.calendars) {
+                    var busyTimes = resp.calendars[calId].busy;
+                    var tb = peopleInfo[calId].times;
+                    for(b in busyTimes) {
+                        var currStart = strToDate(busyTimes[b].start).roundDown15();
+                        var currEnd = strToDate(busyTimes[b].end).roundUp15();
+                        
+                        var duration = getMinsDiff(currStart, currEnd);
+                        tb.markBlocks(currStart, duration, BUSY);
+                    }
+                    peopleInfo[calId].times = tb;
+                }
+                // Raw data has been pulled
+                
+                // Clean up data for optimization
+                var interviewerId = getIntId(peopleInfo);
+                trimSched(peopleInfo, interviewerId);
+                
+                var masterSched = peopleInfo[interviewerId].times.freeTimes;
+                var otherScheds = []
+                
+                for(var calId in peopleInfo) {
+                    if(calId === interviewerId) {
+                        continue;
+                    }
+                    
+                    otherScheds.push({id: calId, times: peopleInfo[calId].times.freeTimes});
                 }
                 
-                otherScheds.push({id: calId, times: peopleInfo[calId].times.freeTimes});
-            }
-            
-            // Perform algo
-            findMatching(masterSched, otherScheds, peopleInfo[interviewerId].interviewDuration);
-            var output = {};
-            
-            for(var slot in masterSched) {
-                // Double check for string as per http://stackoverflow.com/questions/4059147/check-if-a-variable-is-a-string
-                if(typeof masterSched[slot] == 'string' || masterSched[slot] instanceof String) {
-                    if(!(masterSched[slot] in output)) {
-                        output[masterSched[slot]] = peopleInfo[interviewerId].times.start.clone().addMinutes(slot * 15);
+                // Perform algo
+                findMatching(masterSched, otherScheds, peopleInfo[interviewerId].interviewDuration);
+                var output = {};
+                
+                for(var slot in masterSched) {
+                    // Double check for string as per http://stackoverflow.com/questions/4059147/check-if-a-variable-is-a-string
+                    if(typeof masterSched[slot] == 'string' || masterSched[slot] instanceof String) {
+                        if(!(masterSched[slot] in output)) {
+                            output[masterSched[slot]] = peopleInfo[interviewerId].times.start.clone().addMinutes(slot * 15);
+                        }
                     }
                 }
+                
+                // Final output keyed on calId -> start datetime of interview
+                //console.log(output);
+                addInterview(peopleInfo, output);
             }
-            
-            // Final output keyed on calId -> start datetime of interview
-            //console.log(output);
-            addInterview(peopleInfo, output);
-            
         });
     });
 }

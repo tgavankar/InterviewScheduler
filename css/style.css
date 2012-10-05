@@ -65,12 +65,26 @@ h1, h2 {
 
 #calContent {
     text-align: center;
+    width: 100%
 }
 
 #canvasLoader {
     margin-top: 50px;
 }
 
-.splashContent {
+
+.splashContent #faq{
     text-align: left;
+    width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+    list-style-type: circle;
+}
+
+.splashContent #faq{
+    text-align: left;
+    width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+    list-style-type: circle;
 }
