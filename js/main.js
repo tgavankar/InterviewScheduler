@@ -199,9 +199,14 @@ function getFreeBusy(peopleInfo) {
     gapi.client.load('calendar', 'v3', function(callback) {
         var query = gapi.client.calendar.freebusy.query(data);
         query.execute(function(resp) {
+            for(var i in items) {
+                var tb = new TimeBlock(data.timeMin, data.timeMax);
+                peopleInfo[items[i].id].times = tb;
+            }
+        
             for(var calId in resp.calendars) {
                 var busyTimes = resp.calendars[calId].busy;
-                var tb = new TimeBlock(data.timeMin, data.timeMax);
+                var tb = peopleInfo[calId].times;
                 for(b in busyTimes) {
                     var currStart = strToDate(busyTimes[b].start).roundDown15();
                     var currEnd = strToDate(busyTimes[b].end).roundUp15();
