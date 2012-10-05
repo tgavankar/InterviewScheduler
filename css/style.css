@@ -19,6 +19,8 @@ body {
     margin-bottom: 10px;
 }
 
+
+
 input[type="text"], textarea, select {
     background-color: #fff7d7;
     border-color: #EB8F00;
@@ -58,4 +60,12 @@ button.delete {
 
 h1.logo {
     font-family: Trebuchet MS, Tahoma, Verdana, Arial, sans-serif;
+}
+
+#calContent {
+    text-align: center;
+}
+
+#canvasLoader {
+    margin-top: 50px;
 }
