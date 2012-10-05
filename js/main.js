@@ -255,6 +255,16 @@ function getFreeBusy(peopleInfo) {
 function addInterview(peopleInfo, output) {
     gapi.client.setApiKey(keys[user]['api']);
     var interviewerId = getIntId(peopleInfo);
+    
+    var requestCallback = new MyRequestsCompleted({
+        numRequest: Object.keys(output).length,
+        singleCallback: function(){
+            cl.hide();
+            $("#calContent").html('');
+            $("#calContent").append('<iframe id="calFrame" src="https://www.google.com/calendar/embed?src=' + encodeURIComponent(peopleInfo[interviewerId].calId) + '" style="border: 0" width="700" height="800" frameborder="0" scrolling="no"></iframe>');
+        }
+    });
+    
     for(i in output) {
         var slot = new Slot();
         slot.summary = "Interview";
@@ -262,22 +272,16 @@ function addInterview(peopleInfo, output) {
         slot.description = "Interview for: " + peopleInfo[i].fname + " " + peopleInfo[i].lname;
         slot.start = {'dateTime': output[i]};
         slot.end = {'dateTime': output[i].clone().addMinutes(peopleInfo[interviewerId].interviewDuration*15)};
-        addEvent(slot, peopleInfo[interviewerId].calId);       
-    }
-    
-    cl.hide();
-    $("#calContent").html('');
-    $("#calContent").append('<iframe id="calFrame" src="https://www.google.com/calendar/embed?src=' + encodeURIComponent(peopleInfo[interviewerId].calId) + '" style="border: 0" width="700" height="800" frameborder="0" scrolling="no"></iframe>');
+        addEvent(slot, peopleInfo[interviewerId].calId, function(data) { requestCallback.requestComplete(true); });       
+    }   
 }
 
-function addEvent(slot, calId) {
+function addEvent(slot, calId, callback) {
     gapi.client.load('calendar', 'v3', function() {
         var req = gapi.client.calendar.events.insert({
         'calendarId': calId,
         'resource': slot});
-        req.execute(function(resp) {
-            console.log(resp);           
-        });
+        req.execute(callback);
     });
 }
 
@@ -327,23 +331,50 @@ function strToDate(s) {
     return d;
 }
 
+
+// Source: http://stackoverflow.com/questions/4368946/javascript-callback-for-multiple-ajax-calls
+var MyRequestsCompleted = (function() {
+    var numRequestToComplete, requestsCompleted, callBacks, singleCallBack;
+
+    return function(options) {
+        if (!options) options = {};
+
+        numRequestToComplete = options.numRequest || 0;
+        requestsCompleted = options.requestsCompleted || 0;
+        callBacks = [];
+        var fireCallbacks = function() {
+            for (var i = 0; i < callBacks.length; i++) callBacks[i]();
+        };
+        if (options.singleCallback) callBacks.push(options.singleCallback);
+
+        this.addCallbackToQueue = function(isComplete, callback) {
+            if (isComplete) requestsCompleted++;
+            if (callback) callBacks.push(callback);
+            if (requestsCompleted == numRequestToComplete) fireCallbacks();
+        };
+        this.requestComplete = function(isComplete) {
+            if (isComplete) requestsCompleted++;
+            if (requestsCompleted == numRequestToComplete) fireCallbacks();
+        };
+        this.setCallback = function(callback) {
+            callBacks.push(callBack);
+        };
+    };
+})();
+
 /*************************************other stuff**********************************/
 function init() { 
-    gapi.auth.init(checkAuth); 
-} 
-
-function checkAuth() { 
-    var config = {
-        'client_id': keys[user]['client'],
-        'scope': 'https://www.googleapis.com/auth/calendar',
-        'response_type': 'token'
-    };
-    setTimeout(function() { 
+    gapi.auth.init(function() {
+        var config = {
+            'client_id': keys[user]['client'],
+            'scope': 'https://www.googleapis.com/auth/calendar',
+            'response_type': 'token'
+        };
         gapi.auth.authorize(config, function() {
             console.log('login complete');
             console.log(gapi.auth.getToken());
             var peopleInfo = parse();
             getFreeBusy(peopleInfo);
         }); 
-    }, 1); 
+    }); 
 } 
