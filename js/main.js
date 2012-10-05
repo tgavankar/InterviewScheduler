@@ -15,6 +15,16 @@ var keys = {
     }
 };
 
+/*
+interviewer: jonpm7ca6n94f79gd2cru11u9g@group.calendar.google.com
+start: 2012-10-01T09:00:00.000-04:00
+end: 2012-10-05T17:00:00.000-04:00
+
+tanay: ddc46lerctese0eptdup32vilg@group.calendar.google.com
+jocelyn: r5p25tev3v42r11u242u959ev8@group.calendar.google.com
+narasimhan.priya@gmail.com
+*/
+
 var FREE = 1;
 var BUSY = 0;
 
@@ -27,6 +37,23 @@ $(document).ready(function() {
         separator: "T",
         stepMinute: 15,
         showTimezone: true,
+    });
+    
+    $("#accordion").accordion({ autoHeight: false, collapsible : true});
+    
+    $("#addCandidate").click(function(event) {
+        event.preventDefault();
+        var active = $('#accordion').accordion('option', 'active');
+        $('#accordion').append('<h3><a href="#">Candidate</a></h3><div><fieldset class="studentFieldset"><label for="fname">First Name: </label><input type="text" name="fname" class="fname" placeholder="First Name" required /><label for="lname">Last Name: </label><input type="text" name="lname" class="lname" placeholder="Last Name" required /><label for="calId">Calendar ID: </label><input type="text" name="calId" class="calId" placeholder="Google Calendar ID" required /></fieldset><div class="floatright"><button class="delete" type="button">Remove</button></div></div>')
+            .accordion('destroy').accordion({ autoHeight: false, collapsible: true, active: $('.studentFieldset').size()});
+    });
+    
+    // Use live() so dynamically added nodes get the listener too
+    $(".delete", $("#accordion")[0]).live('click', function(event) {
+        event.preventDefault();
+        var currDiv = $(this).parent().parent();
+        currDiv.prev().remove();
+        currDiv.remove();  
     });
     
     $('#form').submit(function(event) {
