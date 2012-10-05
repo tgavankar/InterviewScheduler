@@ -266,7 +266,7 @@ function addInterview(peopleInfo, output) {
         singleCallback: function(){
             cl.hide();
             $("#calContent").html('');
-            $("#calContent").append('<iframe id="calFrame" src="https://www.google.com/calendar/embed?src=' + encodeURIComponent(peopleInfo[interviewerId].calId) + '" style="border: 0" width="700" height="800" frameborder="0" scrolling="no"></iframe>');
+            $("#calContent").append('<iframe id="calFrame" src="https://www.google.com/calendar/embed?src=' + encodeURIComponent(peopleInfo[interviewerId].calId) + '" style="border: 0" width="100%" height="800" frameborder="0" scrolling="no"></iframe>');
         }
     });
     
