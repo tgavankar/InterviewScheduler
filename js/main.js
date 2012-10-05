@@ -33,7 +33,13 @@ $(document).ready(function() {
         event.preventDefault();
         var peopleInfo = parse();
         getFreeBusy(peopleInfo);
+        var calId = $('.interviewerFieldset > .calId').val();
+        var zone = strToDate($('#timeMin').val()).getTimezone();
+        console.log('https://www.google.com/calendar/embed?src='+calId+'&ctz='+zone);
+        $("#frame").attr('src', 'https://www.google.com/calendar/embed?src='+calId+'&ctz='+zone);
+
     });
+
 });
 
 function getIntId(info) {
