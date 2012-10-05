@@ -28,6 +28,8 @@ narasimhan.priya@gmail.com
 var FREE = 1;
 var BUSY = 0;
 
+var cl;
+
 $(document).ready(function() {
     $('.timePicker').datetimepicker({
         dateFormat: "yy-mm-dd",
@@ -58,13 +60,12 @@ $(document).ready(function() {
     
     $('#form').submit(function(event) {
         event.preventDefault();
-        var peopleInfo = parse();
-        getFreeBusy(peopleInfo);
-        var calId = $('.interviewerFieldset > .calId').val();
-        var zone = strToDate($('#timeMin').val()).getTimezone();
-        console.log('https://www.google.com/calendar/embed?src='+calId+'&ctz='+zone);
-        $("#frame").attr('src', 'https://www.google.com/calendar/embed?src='+calId+'&ctz='+zone);
 
+        $("#calContent").html('');
+        cl = new CanvasLoader('calContent');
+        cl.setShape('spiral'); // default is 'oval'
+        cl.show(); // Hidden by default
+        init();
     });
 
 });
@@ -262,7 +263,11 @@ function addInterview(peopleInfo, output) {
         slot.start = {'dateTime': output[i]};
         slot.end = {'dateTime': output[i].clone().addMinutes(peopleInfo[interviewerId].interviewDuration*15)};
         addEvent(slot, peopleInfo[interviewerId].calId);       
-    } 
+    }
+    
+    cl.hide();
+    $("#calContent").html('');
+    $("#calContent").append('<iframe id="calFrame" src="https://www.google.com/calendar/embed?src=' + encodeURIComponent(peopleInfo[interviewerId].calId) + '" style="border: 0" width="700" height="800" frameborder="0" scrolling="no"></iframe>');
 }
 
 function addEvent(slot, calId) {
@@ -334,35 +339,11 @@ function checkAuth() {
         'response_type': 'token'
     };
     setTimeout(function() { 
-        gapi.auth.authorize(
-        config, function() {
+        gapi.auth.authorize(config, function() {
             console.log('login complete');
             console.log(gapi.auth.getToken());
+            var peopleInfo = parse();
+            getFreeBusy(peopleInfo);
         }); 
     }, 1); 
 } 
-
-
-//make Calendar
-function qwer(){
-    gapi.client.setApiKey(keys[user]['api']);
-
-calendar = {
-    'summary': 'calendarSummary',
-    'timeZone': 'America/New_York'
-}
- gapi.client.load('calendar', 'v3', function() {
- var req = gapi.client.calendar.calendars.insert({'resource':calendar});
- req.execute(function(resp) {
-            console.log(resp);
-            console.log(resp.id);
-            if (resp.id){
-                alert("Event was successfully added to the calendar!");
-            } else{
-                alert("An error occurred. Please try again later.")
-            }
-       
-        });
-        });
-}
-
