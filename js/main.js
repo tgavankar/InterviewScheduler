@@ -101,12 +101,22 @@ function Person() {
     this.times;
 }
 
+
+function Slot() {
+    this.location;
+    this.description;
+    this.start;
+    this.end;
+    this.summary;
+}
+
 function Interviewer() {
     Person.call(this);
     this.start;
     this.end;
     this.interviewDuration;
 }
+
 
 // Takes in 2 strings for start and end of this time block
 function TimeBlock(startS, endS) {
@@ -137,7 +147,7 @@ function parse() {
     interviewer.end = $('#timeMax').val();
     interviewer.calId = $('.interviewerFieldset > .calId').val();
     interviewer.interviewDuration = parseInt($('#intDuration').val());
-    
+
     arr[interviewer.calId] = interviewer;
     
     $('.studentFieldset').each(function() {
@@ -171,7 +181,6 @@ function getFreeBusy(peopleInfo) {
     for(var id in peopleInfo) {
         items.push({'id': peopleInfo[id].calId});
     }
-    
     gapi.client.setApiKey(keys[user]['api']);
     //get result from form, for every group, create new Student Object with fname, lname, cal_id, 
     //clone available times into free field, and empty array for busy and also within same loop
@@ -181,7 +190,7 @@ function getFreeBusy(peopleInfo) {
         'timeMin': $('#timeMin').val(),
         'timeMax': $('#timeMax').val(),
     };
-                
+               
     gapi.client.load('calendar', 'v3', function(callback) {
         var query = gapi.client.calendar.freebusy.query(data);
         query.execute(function(resp) {
@@ -197,7 +206,6 @@ function getFreeBusy(peopleInfo) {
                 }
                 peopleInfo[calId].times = tb;
             }
-            
             // Raw data has been pulled
             
             // Clean up data for optimization
@@ -217,7 +225,6 @@ function getFreeBusy(peopleInfo) {
             
             // Perform algo
             findMatching(masterSched, otherScheds, peopleInfo[interviewerId].interviewDuration);
-            
             var output = {};
             
             for(var slot in masterSched) {
@@ -230,8 +237,35 @@ function getFreeBusy(peopleInfo) {
             }
             
             // Final output keyed on calId -> start datetime of interview
-            console.log(output);
+            //console.log(output);
+            addInterview(peopleInfo, output);
             
+        });
+    });
+}
+
+//Add Events to Calendar
+function addInterview(peopleInfo, output) {
+    gapi.client.setApiKey(keys[user]['api']);
+    var interviewerId = getIntId(peopleInfo);
+    for(i in output) {
+        var slot = new Slot();
+        slot.summary = "Interview";
+        slot.location = $('.interviewerFieldset > .loc').val();;
+        slot.description = "Interview for: " + peopleInfo[i].fname + " " + peopleInfo[i].lname;
+        slot.start = {'dateTime': output[i]};
+        slot.end = {'dateTime': output[i].clone().addMinutes(peopleInfo[interviewerId].interviewDuration*15)};
+        addEvent(slot, peopleInfo[interviewerId].calId);       
+    } 
+}
+
+function addEvent(slot, calId) {
+    gapi.client.load('calendar', 'v3', function() {
+        var req = gapi.client.calendar.events.insert({
+        'calendarId': calId,
+        'resource': slot});
+        req.execute(function(resp) {
+            console.log(resp);           
         });
     });
 }
@@ -302,43 +336,7 @@ function checkAuth() {
     }, 1); 
 } 
 
-//Add Events to Calendar
-function asdf() {
-    gapi.client.setApiKey(keys[user]['api']);
-    var resource = {
-        "summary":"My Summary",
-        "location": "My Location",
-        "description": "My Description",
-        "start": {
-        "date": "2012/06/18"  /*if not an all day event, "date" should be "dateTime" with a dateTime value formatted according to RFC 3339*/},
-        "end": {
-        "date": "2012/06/18"  /*if not an all day event, "date" should be "dateTime" with a dateTime value formatted according to RFC 3339*/}
-        };
-       
-    var event = {
-    'summary': 'Appointment',
-    'location': 'Somewhere',
-    'start': {
-    'dateTime': '2012-10-02T9:00:00.000-04:00'},
-    'end': {
-    'dateTime': '2012-10-02T11:25:00.000-04:00'}
-    };
-    gapi.client.load('calendar', 'v3', function() {
-        var req = gapi.client.calendar.events.insert({
-        'calendarId': 'r5p25tev3v42r11u242u959ev8@group.calendar.google.com',
-        'resource': event});
-    
-        req.execute(function(resp) {
-            console.log(resp);
-            if (resp.id){
-                alert("Event was successfully added to the calendar!");
-            } else{
-                alert("An error occurred. Please try again later.")
-            }
-       
-        });
-    });
-}
+
 //make Calendar
 function qwer(){
     gapi.client.setApiKey(keys[user]['api']);
