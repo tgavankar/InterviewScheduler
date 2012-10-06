@@ -11,6 +11,7 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
 <script src="js/libs/jquery-ui-1.8.24.custom.min.js"></script>
 <script src="js/libs/jquery-ui-timepicker-addon.js" type="text/javascript"></script>
+<script src="js/libs/jquery.ba-throttle-debounce.min.js" type="text/javascript"></script>
 <script src="js/libs/date.js" type="text/javascript"></script>
 <script src="js/libs/heartcode-canvasloader-min.js"></script>
 <script src="js/prototypes.js" type="text/javascript"></script>
@@ -31,7 +32,7 @@
             <form id="form">
                 <div id="accordion">
                     <h3><a href="#">Interviewer</a></h3>
-                    <div>
+                    <div class="infobox">
                         <fieldset class="interviewerFieldset">
                             <label for="fname">First Name: </label>
                             <input type="text" name="fname" class="fname" placeholder="First Name" />
@@ -60,7 +61,7 @@
                      </div>
                     
                     <h3><a href="#">Candidate</a></h3>
-                    <div>
+                    <div class="infobox">
                         <fieldset class="studentFieldset">
                             <label for="fname">First Name: </label>
                             <input type="text" name="fname" class="fname" placeholder="First Name" required />

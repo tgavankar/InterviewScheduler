@@ -44,7 +44,7 @@ $(document).ready(function() {
          i++;
     });
     
-    // Datetime picker 
+    // Datetime picker for start/end times
     $('.timePicker').datetimepicker({
         dateFormat: "yy-mm-dd",
         timeFormat: "hh:mm:ss.lz",
@@ -55,16 +55,20 @@ $(document).ready(function() {
         showTimezone: true,
     });
     
+    // Accordian for user input
     $("#accordion").accordion({ autoHeight: false, collapsible : true});
     
+    // Handler to add new candidate
     $("#addCandidate").click(function(event) {
         event.preventDefault();
-        var active = $('#accordion').accordion('option', 'active');
-        $('#accordion').append('<h3><a href="#">Candidate</a></h3><div><fieldset class="studentFieldset"><label for="fname">First Name: </label><input type="text" name="fname" class="fname" placeholder="First Name" required /><label for="lname">Last Name: </label><input type="text" name="lname" class="lname" placeholder="Last Name" required /><label for="calId">Calendar ID: </label><input type="text" name="calId" class="calId" placeholder="Google Calendar ID" required /></fieldset><div class="floatright"><button class="delete" type="button">Remove</button></div></div>')
+        var active = $('#accordion').accordion('option', 'active'); // Get current open
+        // Delete and recreate accordian with new fold.
+        $('#accordion').append('<h3><a href="#">Candidate</a></h3><div class="infobox"><fieldset class="studentFieldset"><label for="fname">First Name: </label><input type="text" name="fname" class="fname" placeholder="First Name" oninvalid="$(this).trigger(\'custom_invalid\');return false" required /><label for="lname">Last Name: </label><input type="text" name="lname" class="lname" placeholder="Last Name" oninvalid="$(this).trigger(\'custom_invalid\');return false" required /><label for="calId">Calendar ID: </label><input type="text" name="calId" class="calId" placeholder="Google Calendar ID" oninvalid="$(this).trigger(\'custom_invalid\');return false" required /></fieldset><div class="floatright"><button class="delete" type="button">Remove</button></div></div>')
             .accordion('destroy').accordion({ autoHeight: false, collapsible: true, active: $('.studentFieldset').size()});
     });
 
     
+    // Handler to remove existing candidates
     // Use live() so dynamically added nodes get the listener too
     $(".delete", $("#accordion")[0]).live('click', function(event) {
         event.preventDefault();
@@ -73,6 +77,25 @@ $(document).ready(function() {
         currDiv.remove();  
     });
     
+    // Workaround for setCustomValidity not firing form submission events if set
+    $('#timeMin').change(function() {
+        document.getElementById('timeMin').setCustomValidity("");
+    });
+    
+    // Invalid HTML5 event doesn't bubble up, so bind to it and fire custom event
+    $('.calId,.fname,.lname').bind('invalid', function(e) {
+        $(this).trigger('custom_invalid');
+    });
+    
+    // Use live() (needs event bubbling) on custom event to handle invalid
+    // Use debounce plugin to only take first event
+    $('.infobox').live('custom_invalid', $.debounce(2000, true, function(e) {
+        if($(this).index('div.infobox') !== $('#accordion').accordion('option', 'active')) {
+            $('#accordion').accordion('activate', $(this).index('div.infobox'));
+        }
+    }));
+
+    // Form submit
     $('#form').submit(function(event) {
         event.preventDefault();
         if(validateDate() > -1) {
@@ -80,6 +103,7 @@ $(document).ready(function() {
         } else {
             document.getElementById('timeMin').setCustomValidity("");
             $("#calContent").html('');
+            // Draw canvas loading icon
             cl = new CanvasLoader('calContent');
             cl.setShape('spiral'); // default is 'oval'
             cl.show(); // Hidden by default
@@ -90,6 +114,9 @@ $(document).ready(function() {
 
 });
 
+/**
+ * Returns calId of interviewer's calendar
+ */
 function getIntId(info) {
     for(var id in info) {
         if(info[id] instanceof Interviewer) {
@@ -98,6 +125,9 @@ function getIntId(info) {
     }
 }
 
+/**
+ * Validates that the end date comes after start date.
+ */
 function validateDate() {
     var date1 = strToDate($('#timeMin').val());
     var date2 = strToDate($('#timeMax').val());
@@ -105,6 +135,8 @@ function validateDate() {
      
 }
 
+/**
+ * ANDS 
 function trimSched(info, intId) {
     for(var id in info) {
         if(id !== intId) {
