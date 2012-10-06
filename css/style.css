@@ -139,6 +139,7 @@ h3 {
 	border-style : solid;
 	border-radius : 15px;
 	box-shadow: 0px 0px 15px #d3d3d3 inset;
+	overflow: auto;
 }
 
 .answer li{
