@@ -135,8 +135,6 @@ function validateDate() {
      
 }
 
-/**
- * ANDS 
 function trimSched(info, intId) {
     for(var id in info) {
         if(id !== intId) {
