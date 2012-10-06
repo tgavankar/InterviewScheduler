@@ -1,45 +1,50 @@
 /**
- * API Key Switcher
- * Change to your name when developing.
+ * Google API Key
  */
-var user = 'jocelyn';
+var user = 'main';
 
 var keys = {
-    'tanay': {
+    'main': {
         'client': '41915610334.apps.googleusercontent.com',
         'api': 'AIzaSyCJB-CTN9Lq925VkvX3awxOMEuNi6OvieA',
-    },
-    'jocelyn': {
-        'client': '1054661617958.apps.googleusercontent.com',
-        'api': 'AIzaSyDiwVKBJwrbJFtrxqjenl7u9fk5eVMoMJw',
     }
 };
 
-/*
-interviewer: jonpm7ca6n94f79gd2cru11u9g@group.calendar.google.com
-start: 2012-10-01T09:00:00.000-04:00
-end: 2012-10-05T17:00:00.000-04:00
+/**
+ * Premade calendars for testing:
+ * 
+ * interviewer: jonpm7ca6n94f79gd2cru11u9g@group.calendar.google.com
+ * start: 2012-10-01T09:00:00.000-04:00
+ * end: 2012-10-05T17:00:00.000-04:00
+ * 
+ * tanay: ddc46lerctese0eptdup32vilg@group.calendar.google.com
+ * jocelyn: r5p25tev3v42r11u242u959ev8@group.calendar.google.com
+ */
 
-tanay: ddc46lerctese0eptdup32vilg@group.calendar.google.com
-jocelyn: r5p25tev3v42r11u242u959ev8@group.calendar.google.com
-narasimhan.priya@gmail.com
-*/
-
+/**
+ * Constants
+ */
 var FREE = 1;
 var BUSY = 0;
 
+/**
+ * Canvas "loading" object
+ */
 var cl;
 
 $(document).ready(function() {
+    // Setup for FAQs handlers.
     $('.question').next().hide();
     var i = 0;
-    $('.question').each(function(){
-         $(this).click(function(){ 
+    $('.question').each(function() {
+         $(this).click(function() { 
              $('.question:eq('+$(this).data('idf')+')').next().slideToggle('slow');
          });
          $(this).data('idf',i);
          i++;
     });
+    
+    // Datetime picker 
     $('.timePicker').datetimepicker({
         dateFormat: "yy-mm-dd",
         timeFormat: "hh:mm:ss.lz",
@@ -70,10 +75,10 @@ $(document).ready(function() {
     
     $('#form').submit(function(event) {
         event.preventDefault();
-        if(validateDate(document.getElementById('timeMax')) > -1) {
-            document.getElementById('timeMax').setCustomValidity("Please enter a Start Date before End Date");
+        if(validateDate() > -1) {
+            document.getElementById('timeMin').setCustomValidity("Please enter a Start Date before End Date");
         } else {
-            document.getElementById('timeMax').setCustomValidity("");
+            document.getElementById('timeMin').setCustomValidity("");
             $("#calContent").html('');
             cl = new CanvasLoader('calContent');
             cl.setShape('spiral'); // default is 'oval'
@@ -93,7 +98,7 @@ function getIntId(info) {
     }
 }
 
-function validateDate(input) {
+function validateDate() {
     var date1 = strToDate($('#timeMin').val());
     var date2 = strToDate($('#timeMax').val());
     return Date.compare(date1, date2);
@@ -102,19 +107,10 @@ function validateDate(input) {
 
 function trimSched(info, intId) {
     for(var id in info) {
-        if(id === intId) {
-            trimInterviewer(info, intId);
-        }
-        else {
+        if(id !== intId) {
             trimPerson(info, id, intId);
         }
     }
-}
-
-function trimInterviewer(info, id) {
-    /*for(int i in info[id].times.freeTimes) {
-        
-    }*/
 }
 
 function trimPerson(info, id, intId) {
@@ -392,7 +388,6 @@ var MyRequestsCompleted = (function() {
     };
 })();
 
-/*************************************other stuff**********************************/
 function init() { 
     gapi.auth.init(function() {
         var config = {
