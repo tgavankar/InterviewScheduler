@@ -11,17 +11,6 @@ var keys = {
 };
 
 /**
- * Premade calendars for testing:
- * 
- * interviewer: jonpm7ca6n94f79gd2cru11u9g@group.calendar.google.com
- * start: 2012-10-01T09:00:00.000-04:00
- * end: 2012-10-05T17:00:00.000-04:00
- * 
- * tanay: ddc46lerctese0eptdup32vilg@group.calendar.google.com
- * jocelyn: r5p25tev3v42r11u242u959ev8@group.calendar.google.com
- */
-
-/**
  * Constants
  */
 var FREE = 1;
@@ -135,6 +124,9 @@ function validateDate() {
      
 }
 
+/**
+ * Combine each candidate and interviewer's calendars via AND.
+ */
 function trimSched(info, intId) {
     for(var id in info) {
         if(id !== intId) {
@@ -143,12 +135,18 @@ function trimSched(info, intId) {
     }
 }
 
+/**
+ * Perform AND on two time block arrays.
+ */
 function trimPerson(info, id, intId) {
     for(var i=0; i<info[id].times.freeTimes.length; i++) {
         info[id].times.freeTimes[i] &= info[intId].times.freeTimes[i]
     }
 }
 
+/**
+ * Person object
+ */
 function Person() {
     this.fname;
     this.lname;
@@ -156,15 +154,9 @@ function Person() {
     this.times;
 }
 
-
-function Slot() {
-    this.location;
-    this.description;
-    this.start;
-    this.end;
-    this.summary;
-}
-
+/**
+ * Interviewer object, inherits from Person
+ */
 function Interviewer() {
     Person.call(this);
     this.start;
@@ -172,6 +164,16 @@ function Interviewer() {
     this.interviewDuration;
 }
 
+/**
+ * Slot object
+ */
+function Slot() {
+    this.location;
+    this.description;
+    this.start;
+    this.end;
+    this.summary;
+}
 
 // Takes in 2 strings for start and end of this time block
 function TimeBlock(startS, endS) {
@@ -223,23 +225,15 @@ function getMinsDiff(start, end) {
     return (end.getTime() - start.getTime()) / (1000 * 60);
 }
 
-/*[
-                    {
-                        'id': 'r5p25tev3v42r11u242u959ev8@group.calendar.google.com'
-                    },{
-                        'id': 'cq6omn9kt4uld6agu4dhevucm0@group.calendar.google.com'
-                    }
-                ]*/
 function getFreeBusy(peopleInfo) {
     var items = [];
 
     for(var id in peopleInfo) {
         items.push({'id': peopleInfo[id].calId});
     }
+
     gapi.client.setApiKey(keys[user]['api']);
-    //get result from form, for every group, create new Student Object with fname, lname, cal_id, 
-    //clone available times into free field, and empty array for busy and also within same loop
-    //create an array of items that holds calid and also push new student objects into student array
+
     var data = { 
         'items': items,
         'timeMin': $('#timeMin').val(),
@@ -276,7 +270,7 @@ function getFreeBusy(peopleInfo) {
                 trimSched(peopleInfo, interviewerId);
                 
                 var masterSched = peopleInfo[interviewerId].times.freeTimes;
-                var otherScheds = []
+                var otherScheds = [];
                 
                 for(var calId in peopleInfo) {
                     if(calId === interviewerId) {
@@ -300,7 +294,6 @@ function getFreeBusy(peopleInfo) {
                 }
                 
                 // Final output keyed on calId -> start datetime of interview
-                //console.log(output);
                 addInterview(peopleInfo, output);
             }
         });
@@ -335,8 +328,8 @@ function addInterview(peopleInfo, output) {
 function addEvent(slot, calId, callback) {
     gapi.client.load('calendar', 'v3', function() {
         var req = gapi.client.calendar.events.insert({
-        'calendarId': calId,
-        'resource': slot});
+            'calendarId': calId,
+            'resource': slot});
         req.execute(callback);
     });
 }
@@ -426,8 +419,6 @@ function init() {
             'response_type': 'token'
         };
         gapi.auth.authorize(config, function() {
-            console.log('login complete');
-            console.log(gapi.auth.getToken());
             var peopleInfo = parse();
             getFreeBusy(peopleInfo);
         }); 

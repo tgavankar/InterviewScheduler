@@ -6,7 +6,9 @@
 .ui-timepicker-div td { font-size: 90%; }
 .ui-tpicker-grid-label { background: none; border: none; margin: 0; padding: 0; }
 
-
+/**
+ * Custom styles
+ */
 
 body {
     background-color: #e3e9ff;
@@ -90,7 +92,6 @@ h2 {
 #canvasLoader {
     margin-top: 50px;
 }
-
 
 #faq {
     border-color: #fbd850;
