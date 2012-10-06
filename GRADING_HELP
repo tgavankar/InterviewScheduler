@@ -1,0 +1,59 @@
+ScheduleMatch
+==================
+ * Tanay Gavankar (tgavanka)
+ * Jocelyn Kong (jocelynk)
+ * Sid Soundararajan (ssoundar)
+
+
+Required Elements [35 pts; 5 pts each]
+    Javascript (including creating your own objects with inheritance)
+        Where: js/main.js:158-184
+        What: Interviewer object inherits from Person, all input data is saved as Person
+        
+    Canvas (somehow this must be included meaningfully)
+        Where: js/main.js:104-106
+        What: Loading icon is drawn in Canvas via library
+        How: Fill in valid data and click "submit" - look loading spinner
+        
+    HTML (including a reasonably wide range of techniques, such as tables, forms with form validation, etc)
+        Where: index.html
+        How: 
+            Uses divs for layout
+            Fieldset/form elements for data input (with labels)
+            Iframe for calendar
+            HTML5 form validation (required keyword)
+            Lists (ul/ol) for FAQs
+            
+    CSS (including a reasonably range of techniques, such as reset, pseudo-selectors, fixed and fluid layout, transitions and animations, etc)
+        Uses Skeleton for fluid layout (css/libs/skeleton/*)
+        Transitions on logo hover (css/style.css:158-165)
+        Pseudo-selectors for hover/active/focus (css/style.css:33, css/style.css:121)
+        CSS Reset in Skeleton (based on E. Meyer reset) (css/libs/skeleton/base.css:27-48)
+        Box-shadow, border (w/ radius), etc in FAQs (css/style.css:135-146)
+        
+    DOM manipulation
+        Candidate fields addition (js/main.js:59-65)
+            Click "Add candidate" button
+        Candidate fields removal (js/main.js:70-75)
+            Click "Remove" button in candidate accordion
+        Main page content replacement (js/main.js:321)
+            Supply form and press "Submit" (valid and invalid forms)
+        Accordion (js/main.js:56)
+            Click on accordion headings
+        Show/hide (js/main.js:34-42)
+            Click on FAQs questions on landing page
+    
+    AJAX and/or JSON-P client
+        Google calendar API
+            Public freebusy query (js/main.js:252)
+            OAuth calendar modification (js/main.js:338)
+    
+    jQuery
+        Everywhere (js/main.js)
+        Libraries
+            jQuery Throttle/Debounce
+                To handle invalid event firing (js/main.js:89)
+            jQuery UI Accordion
+                To handle user input (js/main.js:56)
+            jQuery UI Timedatepicker
+                To handle datetime picking (js/main.js:45)

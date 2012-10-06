@@ -1,4 +1,12 @@
 /**
+ * ScheduleMatch
+ * 15-237 F12
+ * HW4
+ * Tanay Gavankar (tgavanka)
+ * Jocelyn Kong (jocelynk)
+ * Sid Soundararajan (ssoundar)
+
+/**
  * Google API Key
  */
 var user = 'main';
